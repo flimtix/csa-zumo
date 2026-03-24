@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Zumo.ConsoleApp/Zumo.ConsoleApp.csproj" />
+  <Project Path="Zumo.Library/Zumo.Library.csproj" />
+</Solution>
