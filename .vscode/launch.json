@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "projectName",
+            "type": "pickString",
+            "description": "Select the application to debug",
+            "options": [
+                "Zumo.Labyrinth",
+                "Zumo.Calibration"
+            ],
+            "default": "Zumo.Labyrinth"
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Remote Debug RPI",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "~/netcore/${input:projectName}/${input:projectName}.dll",
+            "args": [],
+            "cwd": "~/netcore/${input:projectName}",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}",
+                "pipeProgram": "/usr/bin/ssh",
+                "pipeArgs": [
+                    "pi@hslu-rpi"
+                ],
+                "debuggerPath": "~/vsdbg/vsdbg"
+            }
+        }
+    ]
+}

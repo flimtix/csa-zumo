@@ -1,3 +1,7 @@
 {
-    "dotnet.defaultSolution": "Zumo.slnx"
+    "dotnet.defaultSolution": "Zumo.slnx",
+    "chat.tools.terminal.autoApprove": {
+        "dotnet test": true,
+        "dotnet build": true
+    }
 }
