@@ -2,6 +2,5 @@ namespace Zumo.Library.Lidar;
 
 public interface ILidar
 {
-    int Speed { get; }
-    LidarPoint this[int angle] { get; }
+    Task<IReadOnlyList<LidarPoint>> GetFullScanAsync(CancellationToken ct = default);
 }
