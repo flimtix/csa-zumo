@@ -47,7 +47,7 @@ public sealed class ZumoColorSensorService : IColorSensorService
     {
         var classification = hue switch
         {
-            < 30 => FloorColorClassification.Unknown, // TMP
+            < 30 => FloorColorClassification.Red,
             < 90 => FloorColorClassification.Yellow,
             < 150 => FloorColorClassification.Green,
             < 210 => FloorColorClassification.Cyan,
