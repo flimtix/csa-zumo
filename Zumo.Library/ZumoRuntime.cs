@@ -16,7 +16,6 @@ public sealed class ZumoRuntime : IDisposable
 {
     private readonly GpioController gpio;
     private readonly RequestResponseBroker broker;
-    private readonly Cm4Lidar? lidar;
     private bool disposed;
 
     public ZumoRuntime(ZumoRuntimeOptions? options = null)
@@ -36,11 +35,9 @@ public sealed class ZumoRuntime : IDisposable
         Cm4Button = new Cm4Button(gpio, runtimeOptions.Cm4ButtonPin);
         Cm4Led = new Cm4Led(gpio, runtimeOptions.Cm4LedPin);
 
-        if (runtimeOptions.EnableLidar)
-        {
-            lidar = new Cm4Lidar(gpio, runtimeOptions.LidarMotorPin);
-            lidar.SetPower(true);
-        }
+        var lidar = new Cm4Lidar(gpio, runtimeOptions.LidarMotorPin);
+        lidar.SetPower(true);
+        Lidar = lidar;
 
         Ping = new PingService(Broker, runtimeOptions.DefaultRequestTimeout);
         Drive = new ZumoDriveService(Broker, runtimeOptions.DefaultRequestTimeout);
@@ -58,7 +55,7 @@ public sealed class ZumoRuntime : IDisposable
 
     public IButton Cm4Button { get; }
     public ILed Cm4Led { get; }
-    public ILidar? Lidar => lidar;
+    public ILidar Lidar { get; }
 
     public IPingService Ping { get; }
     public IDriveService Drive { get; }
@@ -103,7 +100,7 @@ public sealed class ZumoRuntime : IDisposable
             disposableCm4Led.Dispose();
         }
 
-        if (lidar is IDisposable disposableLidar)
+        if (Lidar is IDisposable disposableLidar)
         {
             disposableLidar.Dispose();
         }

@@ -231,7 +231,7 @@ namespace Zumo.Library.Lidar
         {
             for (int i = 0; i < _currentScan.Length; i++)
             {
-                _currentScan[i] = new LidarPoint(ushort.MaxValue, 0);
+                _currentScan[i] = new LidarPoint(null, 0);
             }
         }
 
