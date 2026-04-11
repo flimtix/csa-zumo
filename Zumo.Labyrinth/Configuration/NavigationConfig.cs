@@ -6,6 +6,7 @@ namespace Zumo.Labyrinth.Configuration;
 public sealed class NavigationOption
 {
     public LogLevel LogLevel { get; init; } = LogLevel.Debug;
+    public NavigationState StartingState { get; init; } = NavigationState.MoveToInnerRing;
     public NavigationBehaviorOption Navigation { get; init; } = new();
     public NavigationSensorOption Sensor { get; init; } = new();
     public NavigationSafetyOption Safety { get; init; } = new();
@@ -19,10 +20,15 @@ public sealed class NavigationBehaviorOption
     public int WallThresholdMm { get; init; } = 150;
     public int GapThresholdMm { get; init; } = 250;
     public int GapCheckDriveInMm { get; init; } = 25;
-    public int MissingRightWallMultiplier { get; init; } = 3;
     public int GapDetectionMaxAttempts { get; init; } = 20;
-    public int GapDetectionRetryDelayMs { get; init; } = 200;
     public int SideRiskFallbackTurnDegrees { get; init; } = 25;
+    public int InnerRingEntryWallMissingMm { get; init; } = 300;
+    public int InnerRingEntryDriveInMm { get; init; } = 60;
+    public int OuterRingApproachStepMm { get; init; } = 80;
+    public int OuterRingScanStepMm { get; init; } = 50;
+    public int OuterRingExitDistanceMm { get; init; } = 300;
+    public int OuterRingExitMaxRetries { get; init; } = 6;
+    public int OuterRingExitRetryDelayMs { get; init; } = 120;
 }
 
 public sealed class NavigationSensorOption
@@ -43,7 +49,7 @@ public sealed class NavigationSafetyOption
     public int CollisionDangerDistanceMm { get; init; } = 150;
     public int SideCollisionDangerDistanceMm { get; init; } = 130;
     public int GapAlignmentCorrectionDegrees { get; init; } = 5;
-    public int GapAlignmentMaxCorrections { get; init; } = 7;
+    public int GapAlignmentMaxCorrections { get; init; } = 10;
     public int GapAlignmentRecheckDelayMs { get; init; } = 120;
 }
 
@@ -53,7 +59,7 @@ public sealed class NavigationMotionOption
     public int SafeDriveChunkMm { get; init; } = 25;
     public ushort DriveSpeedMmPerSecond { get; init; } = 90;
     public ushort DriveAccelerationMmPerSecondSquared { get; init; } = 120;
-    public int DriveRightDriftCorrectionDegrees { get; init; } = 1;
+    public int? DriveRightDriftCorrectionDegrees { get; init; } = 4;
     public ushort TurnSpeedMmPerSecond { get; init; } = 200;
     public ushort TurnAccelerationMmPerSecondSquared { get; init; } = 150;
     public TimeSpan DriveCompletionTimeout { get; init; } = TimeSpan.FromSeconds(10);
@@ -65,13 +71,13 @@ public sealed class NavigationCalibrationOption
 {
     public int WallCalibrationDistanceMm { get; init; } = 80;
     public int WallCalibrationApproachStepMm { get; init; } = 15;
-    public int WallAlignmentToleranceMm { get; init; } = 15;
-    public int WallAlignmentTurnStepDegrees { get; init; } = 10;
-    public int WallAlignmentMaxIterations { get; init; } = 15;
+    public int WallAlignmentToleranceMm { get; init; } = 10;
+    public int WallAlignmentTurnStepDegrees { get; init; } = 5;
+    public int WallAlignmentMaxIterations { get; init; } = 25;
 }
 
 public sealed class LibraryOption
 {
     public FloorColorClassification InnerRingFloorColor { get; init; } = FloorColorClassification.Blue;
-    public FloorColorClassification OuterRingFloorColor { get; init; } = FloorColorClassification.Green;
+    public FloorColorClassification OuterRingFloorColor { get; init; } = FloorColorClassification.Yellow;
 }

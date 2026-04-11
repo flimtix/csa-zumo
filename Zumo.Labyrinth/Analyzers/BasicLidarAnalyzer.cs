@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Zumo.Library.Sensing;
 
 namespace Zumo.Labyrinth.Analyzers;
 
@@ -72,27 +71,25 @@ public sealed class BasicLidarAnalyzer : ILidarAnalyzer
         int firstOffset = -(smoothingCount / 2);
         int lastOffset = firstOffset + smoothingCount - 1;
 
-        int localMin = int.MaxValue;
-        int localMax = 0;
+        ushort localMin = ushort.MaxValue;
+        ushort localMax = 0;
         bool hasValidDistance = false;
 
         for (int offset = firstOffset; offset <= lastOffset; offset++)
         {
-            int sample = snapshot.GetPointAtAngle(centerAngle + offset).Distance;
-            if (sample <= 0)
+            ushort? sample = snapshot.GetPointAtAngle(centerAngle + offset).Distance;
+            if (sample.HasValue && sample > 0)
             {
-                continue;
+                localMin = Math.Min(localMin, sample.Value);
+                localMax = Math.Max(localMax, sample.Value);
+                hasValidDistance = true;
             }
-
-            localMin = Math.Min(localMin, sample);
-            localMax = Math.Max(localMax, sample);
-            hasValidDistance = true;
         }
 
-        int smoothedDistance = 0;
+        ushort smoothedDistance = 0;
         if (hasValidDistance)
         {
-            smoothedDistance = localMin + ((localMax - localMin) / 2);
+            smoothedDistance = (ushort)(localMin + ((localMax - localMin) / 2));
         }
 
         return smoothedDistance;

@@ -35,38 +35,33 @@ public sealed class MoveToInnerRingState : INavigationState
 
         await ledService.SetStatusAsync(NavigationActivityStatus.Scanning);
 
-        var nextState = NavigationState.MoveToInnerRing;
-        var rightDistance = await distanceService.GetRightDistanceMmAsync();
-        var wallMissingThreshold = config.Navigation.WallThresholdMm * config.Navigation.MissingRightWallMultiplier;
+        var distanceSnapshot = await distanceService.CaptureAsync();
 
-        if (rightDistance > wallMissingThreshold)
+        NavigationState nextState;
+        if (distanceSnapshot.RightDistanceMm > config.Navigation.InnerRingEntryWallMissingMm)
         {
-            logger.LogDebug("Right wall is missing. Switching to corridor mode.");
+            logger.LogDebug("Side walls are missing. Switching to corridor mode.");
 
             await ledService.SetStatusAsync(NavigationActivityStatus.DrivingStraight);
-            await motionService.DriveStraightSafelyAsync(config.Navigation.WallThresholdMm);
+            await motionService.DriveStraightSafelyAsync(config.Navigation.InnerRingEntryDriveInMm);
             await ledService.SetStatusAsync(NavigationActivityStatus.Turning);
             await motionService.RotateInPlace(-90);
 
             nextState = NavigationState.FollowCorridor;
         }
+        else if (distanceSnapshot.FrontDistanceMm > config.Navigation.WallThresholdMm)
+        {
+            await ledService.SetStatusAsync(NavigationActivityStatus.DrivingStraight);
+            await motionService.DriveStraightSafelyAsync(config.Motion.StepSizeMm);
+            nextState = NavigationState.MoveToInnerRing;
+        }
         else
         {
-            var frontDistance = await distanceService.GetFrontDistanceMmAsync();
-            if (frontDistance > config.Navigation.WallThresholdMm)
-            {
-                await ledService.SetStatusAsync(NavigationActivityStatus.DrivingStraight);
-                await motionService.DriveStraightSafelyAsync(config.Motion.StepSizeMm);
-                nextState = NavigationState.MoveToInnerRing;
-            }
-            else
-            {
-                await ledService.SetStatusAsync(NavigationActivityStatus.Blocked);
-                await motionService.CalibrateAgainstFrontWallAsync();
-                await ledService.SetStatusAsync(NavigationActivityStatus.Turning);
-                await motionService.RotateInPlace(-90);
-                nextState = NavigationState.FollowCorridor;
-            }
+            await ledService.SetStatusAsync(NavigationActivityStatus.Blocked);
+            await motionService.CalibrateAgainstFrontWallAsync();
+            await ledService.SetStatusAsync(NavigationActivityStatus.Turning);
+            await motionService.RotateInPlace(-90);
+            nextState = NavigationState.FollowCorridor;
         }
 
         context.TransitionTo(nextState);

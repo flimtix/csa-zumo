@@ -1,4 +1,4 @@
-namespace Zumo.Library.Sensing;
+namespace Zumo.Labyrinth.Models;
 
 /// <summary>
 /// Analysis result of a LiDAR sector (wedge of angles).

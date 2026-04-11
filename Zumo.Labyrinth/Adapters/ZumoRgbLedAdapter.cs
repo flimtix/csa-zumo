@@ -21,6 +21,7 @@ public sealed class ZumoRgbLedAdapter : ILedService
             NavigationActivityStatus.Scanning => Color.Blue,
             NavigationActivityStatus.DrivingStraight => Color.Yellow,
             NavigationActivityStatus.Turning => Color.MediumPurple,
+            NavigationActivityStatus.ExitingLabyrinth => Color.Orange,
             NavigationActivityStatus.Blocked => Color.Red,
             NavigationActivityStatus.Solved => Color.LimeGreen,
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported navigation activity status."),

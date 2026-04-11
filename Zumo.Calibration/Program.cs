@@ -13,15 +13,10 @@ Console.CancelKeyPress += (_, eventArgs) =>
 
 Console.WriteLine("Starting Zumo calibration tool. Press Ctrl+C to stop.");
 
-var runtimeOptions = new ZumoRuntimeOptions
-{
-	EnableLidar = true
-};
-
 CalibrationProfileFileStore profileStore = new(CalibrationProfileFileStore.GetDefaultPath());
 CalibrationProfile profile = profileStore.LoadOrDefault();
 
-using var runtime = new ZumoRuntime(runtimeOptions);
+using var runtime = new ZumoRuntime();
 
 ApplyPersistedCalibration(runtime, profile, cts.Token);
 
@@ -40,6 +35,8 @@ CalibrationController controller = new(
 
 try
 {
+	// Wait a moment for the runtime to initialize and apply calibration before starting the controller
+	await Task.Delay(2000, cts.Token);
 	await controller.RunAsync(cts.Token);
 }
 catch (OperationCanceledException)

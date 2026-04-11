@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Zumo.Labyrinth.Orchestration;
 
@@ -10,13 +11,14 @@ public sealed class NavigationStateContext
 
     public NavigationStateContext(
         IEnumerable<INavigationState> states,
-        ILogger<NavigationStateContext> logger)
+        ILogger<NavigationStateContext> logger,
+        IOptions<NavigationOption> options)
     {
         ArgumentNullException.ThrowIfNull(states);
 
         this.states = states.ToDictionary(state => state.State);
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        CurrentState = NavigationState.MoveToInnerRing;
+        CurrentState = options.Value.StartingState;
         EnsureStateCoverage();
     }
 
@@ -52,10 +54,15 @@ public sealed class NavigationStateContext
         }
     }
 
+    public void MarkSolved(NavigationState terminalState)
+    {
+        CurrentState = terminalState;
+        isSolved = true;
+    }
+
     public void MarkSolved()
     {
-        CurrentState = NavigationState.InnerRingSolved;
-        isSolved = true;
+        MarkSolved(CurrentState);
     }
 
     private void EnsureStateCoverage()

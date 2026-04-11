@@ -6,6 +6,7 @@ public enum NavigationActivityStatus
     Scanning,
     DrivingStraight,
     Turning,
+    ExitingLabyrinth,
     Blocked,
     Solved,
 }

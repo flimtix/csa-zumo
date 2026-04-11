@@ -1,12 +1,18 @@
+using Microsoft.Extensions.Logging;
+
 namespace Zumo.Labyrinth.States;
 
 public sealed class InnerRingSolvedState : INavigationState
 {
+    private readonly ILogger<InnerRingSolvedState> logger;
     private readonly ILedService ledService;
 
-    public InnerRingSolvedState(ILedService ledService)
+    public InnerRingSolvedState(
+        ILedService ledService,
+        ILogger<InnerRingSolvedState> logger)
     {
         this.ledService = ledService ?? throw new ArgumentNullException(nameof(ledService));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public NavigationState State => NavigationState.InnerRingSolved;
@@ -15,7 +21,8 @@ public sealed class InnerRingSolvedState : INavigationState
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        await ledService.SetStatusAsync(NavigationActivityStatus.Solved);
-        context.MarkSolved();
+        logger.LogInformation("Inner-ring navigation completed. Transitioning to outer-ring phase.");
+        await ledService.SetStatusAsync(NavigationActivityStatus.Scanning);
+        context.TransitionTo(NavigationState.MoveToOuterRing);
     }
 }

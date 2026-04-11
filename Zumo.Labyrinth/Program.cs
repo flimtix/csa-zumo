@@ -11,8 +11,6 @@ using Zumo.Library.Lidar;
 
 var services = new ServiceCollection();
 var navigationConfig = new NavigationOption();
-var navigationOptionValidator = new NavigationOptionValidator();
-navigationOptionValidator.Validate(navigationConfig);
 
 services.AddLogging(logging =>
 {
@@ -27,17 +25,13 @@ services.AddLogging(logging =>
 });
 
 services.AddSingleton<IOptions<NavigationOption>>(Options.Create(navigationConfig));
-services.AddSingleton<INavigationOptionValidator, NavigationOptionValidator>();
 
-services.AddSingleton(_ => new ZumoRuntime(new ZumoRuntimeOptions
-{
-    EnableLidar = true
-}));
+services.AddSingleton<ZumoRuntime>();
 
 services.AddSingleton<IDriveService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Drive);
 services.AddSingleton<IColorSensorService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().ColorSensor);
 services.AddSingleton<IZumoRgbLedService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().RgbLed);
-services.AddSingleton<ILidar>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Lidar ?? throw new InvalidOperationException("LiDAR is not available. EnableLidar must be true."));
+services.AddSingleton<ILidar>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Lidar);
 
 services.AddSingleton<ILidarAnalyzer, BasicLidarAnalyzer>();
 services.AddSingleton<ILedService, ZumoRgbLedAdapter>();
@@ -48,6 +42,10 @@ services.AddSingleton<INavigationState, MoveToInnerRingState>();
 services.AddSingleton<INavigationState, FollowCorridorState>();
 services.AddSingleton<INavigationState, CheckGapState>();
 services.AddSingleton<INavigationState, InnerRingSolvedState>();
+services.AddSingleton<INavigationState, MoveToOuterRingState>();
+services.AddSingleton<INavigationState, FollowOuterCorridorState>();
+services.AddSingleton<INavigationState, ExitLabyrinthState>();
+services.AddSingleton<INavigationState, LabyrinthSolvedState>();
 services.AddSingleton<NavigationStateContext>();
 
 services.AddSingleton<IInnerRingNavigator, InnerRingNavigator>();
@@ -58,9 +56,12 @@ var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 var programLogger = loggerFactory.CreateLogger("Program");
 
 programLogger.LogInformation("Configured log level: {LogLevel}", navigationConfig.LogLevel);
-programLogger.LogInformation("Starting inner-ring navigation.");
+programLogger.LogInformation("Starting labyrinth navigation.");
 
 ApplyCalibrationProfile(serviceProvider.GetRequiredService<ZumoRuntime>(), programLogger);
+
+// Wait a moment for the runtime to initialize and apply calibration before starting the controller
+await Task.Delay(2000);
 await navigator.RunInnerRingNavigationAsync();
 
 static void ApplyCalibrationProfile(ZumoRuntime runtime, ILogger logger)

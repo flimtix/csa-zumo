@@ -17,8 +17,8 @@ public sealed class InnerRingNavigator : IInnerRingNavigator
 
     public async Task RunInnerRingNavigationAsync()
     {
-        logger.LogInformation("Inner-ring navigation started.");
+        logger.LogInformation("Labyrinth navigation started (inner-ring entry phase).");
         await stateContext.RunAsync();
-        logger.LogInformation("Inner-ring navigation finished.");
+        logger.LogInformation("Labyrinth navigation finished.");
     }
 }

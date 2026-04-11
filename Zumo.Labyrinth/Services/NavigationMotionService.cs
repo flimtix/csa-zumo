@@ -11,6 +11,8 @@ public sealed class NavigationMotionService : INavigationMotionService
     private readonly ILogger<NavigationMotionService> logger;
     private readonly NavigationOption config;
 
+    private int distanceDrivenSinceLastCalibrationMm;
+
     public NavigationMotionService(
         IDriveService driveService,
         INavigationDistanceService distanceService,
@@ -37,6 +39,7 @@ public sealed class NavigationMotionService : INavigationMotionService
 
         await Task.Delay(config.Motion.TurnSettleDelay);
         driveService.SetWheelSpeed(0, 0);
+        ResetDriftCorrection();
     }
 
     public async Task<SafeDriveStopReason> DriveStraightSafelyAsync(int targetDistanceMm)
@@ -73,9 +76,12 @@ public sealed class NavigationMotionService : INavigationMotionService
             remainingDistanceMm -= driveChunkMm;
         }
 
-        if (config.Motion.DriveRightDriftCorrectionDegrees != 0)
+        if (config.Motion.DriveRightDriftCorrectionDegrees.HasValue)
         {
-            await RotateInPlace(config.Motion.DriveRightDriftCorrectionDegrees);
+            var drivenDistanceMm = targetDistanceMm - remainingDistanceMm;
+            distanceDrivenSinceLastCalibrationMm += drivenDistanceMm;
+
+            await CorrectDriftAsync();
         }
         return stopReason;
     }
@@ -167,6 +173,7 @@ public sealed class NavigationMotionService : INavigationMotionService
         logger.LogInformation("Wall calibration started.");
         await ApproachWallForCalibrationAsync();
         await AlignParallelToWallAsync();
+        ResetDriftCorrection();
         logger.LogInformation("Wall calibration finished.");
     }
 
@@ -290,5 +297,30 @@ public sealed class NavigationMotionService : INavigationMotionService
         }
 
         return correctionAngle;
+    }
+
+    private async Task CorrectDriftAsync()
+    {
+        if (config.Motion.DriveRightDriftCorrectionDegrees.HasValue && Math.Abs(distanceDrivenSinceLastCalibrationMm) >= 300)
+        {
+            logger.LogInformation("Performing drift correction after driving {DistanceDrivenMm}mm since last calibration.", distanceDrivenSinceLastCalibrationMm);
+            var drivingDirectionFactor = distanceDrivenSinceLastCalibrationMm >= 0 ? 1 : -1;
+            var correctionDegrees = config.Motion.DriveRightDriftCorrectionDegrees.Value;
+            var relativeCorrection = correctionDegrees * drivingDirectionFactor;
+            await RotateInPlace(relativeCorrection);
+            ResetDriftCorrection();
+        }
+        else
+        {
+            driveService.SetWheelSpeed(-5, -5);
+            driveService.RotateInPlace(1, config.Motion.TurnSpeedMmPerSecond, config.Motion.TurnAccelerationMmPerSecondSquared);
+            await Task.Delay(100);
+            driveService.SetWheelSpeed(0, 0);
+        }
+    }
+
+    private void ResetDriftCorrection()
+    {
+        distanceDrivenSinceLastCalibrationMm = 0;
     }
 }

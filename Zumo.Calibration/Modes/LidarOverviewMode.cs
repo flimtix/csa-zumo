@@ -64,7 +64,7 @@ public sealed class LidarOverviewMode : CalibrationModeBase
 
             for (int i = start; i <= end; i++)
             {
-                distanceSum += points[i].Distance;
+                distanceSum += points[i].Distance ?? ushort.MaxValue;
                 intensitySum += points[i].Intensity;
                 count++;
             }

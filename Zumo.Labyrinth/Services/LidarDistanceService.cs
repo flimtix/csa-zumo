@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Zumo.Library.Lidar;
-using Zumo.Library.Sensing;
 
 namespace Zumo.Labyrinth.Services;
 
@@ -29,7 +28,7 @@ public sealed class LidarDistanceService : INavigationDistanceService
     public async Task<NavigationDistanceSnapshot> CaptureAsync()
     {
         var result = NavigationDistanceSnapshot.Empty;
-        const int maxRetries = 3;
+        const int maxRetries = 4;
 
         for (var attempt = 1; attempt <= maxRetries; attempt++)
         {
@@ -47,7 +46,7 @@ public sealed class LidarDistanceService : INavigationDistanceService
 
             if (attempt < maxRetries)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(100));
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
             }
         }
 
