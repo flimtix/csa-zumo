@@ -66,6 +66,12 @@ Das System tastet sich in extrem kleinen Schritten (z.B. 5cm) vorwärts und zent
    - **Grau / Keine Farbe:** Sackgasse. Der Roboter setzt zurück und probiert den nächsten Weg.
    - **Grün:** Ausgang gefunden! Die Melodie wird abgespielt.
 
+### Demo 🚗
+
+<video height="400" controls>
+  <source src="timelaps.mp4" type="video/mp4">
+</video>
+
 ---
 
 ## 🔌 Hardware & UART-Protokoll
