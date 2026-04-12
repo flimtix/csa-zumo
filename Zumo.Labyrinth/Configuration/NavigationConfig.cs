@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Zumo.Library.Color;
+using Zumo.Library.Sound;
 
 namespace Zumo.Labyrinth.Configuration;
 
@@ -12,6 +13,7 @@ public sealed class NavigationOption
     public NavigationSafetyOption Safety { get; init; } = new();
     public NavigationMotionOption Motion { get; init; } = new();
     public NavigationCalibrationOption Calibration { get; init; } = new();
+    public NavigationAcousticOption Acoustic { get; init; } = new();
     public LibraryOption Library { get; init; } = new();
 }
 
@@ -74,6 +76,14 @@ public sealed class NavigationCalibrationOption
     public int WallAlignmentToleranceMm { get; init; } = 10;
     public int WallAlignmentTurnStepDegrees { get; init; } = 5;
     public int WallAlignmentMaxIterations { get; init; } = 25;
+}
+
+public sealed class NavigationAcousticOption
+{
+    public bool EnableAcousticFeedback { get; init; } = true;
+    public ushort MarkerDetectedFrequencyHz { get; init; } = 1400;
+    public ushort MarkerDetectedDurationMs { get; init; } = 220;
+    public SoundItem MazeSolvedMelody { get; init; } = SoundItem.SuperMario;
 }
 
 public sealed class LibraryOption

@@ -8,6 +8,7 @@ using Zumo.Library.Drive;
 using Zumo.Library.Encoder;
 using Zumo.Library.Led;
 using Zumo.Library.Lidar;
+using Zumo.Library.Sound;
 
 var services = new ServiceCollection();
 var navigationConfig = new NavigationOption();
@@ -32,11 +33,13 @@ services.AddSingleton<IDriveService>(serviceProvider => serviceProvider.GetRequi
 services.AddSingleton<IColorSensorService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().ColorSensor);
 services.AddSingleton<IZumoRgbLedService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().RgbLed);
 services.AddSingleton<ILidar>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Lidar);
+services.AddSingleton<ISoundService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Sound);
 
 services.AddSingleton<ILidarAnalyzer, BasicLidarAnalyzer>();
 services.AddSingleton<ILedService, ZumoRgbLedAdapter>();
 services.AddSingleton<INavigationDistanceService, LidarDistanceService>();
 services.AddSingleton<INavigationMotionService, NavigationMotionService>();
+services.AddSingleton<INavigationAcousticService, NavigationAcousticService>();
 
 services.AddSingleton<INavigationState, MoveToInnerRingState>();
 services.AddSingleton<INavigationState, FollowCorridorState>();

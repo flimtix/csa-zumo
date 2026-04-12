@@ -46,6 +46,7 @@ public sealed class MoveToInnerRingState : INavigationState
             await motionService.DriveStraightSafelyAsync(config.Navigation.InnerRingEntryDriveInMm);
             await ledService.SetStatusAsync(NavigationActivityStatus.Turning);
             await motionService.RotateInPlace(-90);
+            await motionService.DriveStraightSafelyAsync(config.Navigation.InnerRingEntryDriveInMm);
 
             nextState = NavigationState.FollowCorridor;
         }

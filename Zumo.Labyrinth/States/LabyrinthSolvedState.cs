@@ -4,13 +4,16 @@ namespace Zumo.Labyrinth.States;
 
 public sealed class LabyrinthSolvedState : INavigationState
 {
+    private readonly INavigationAcousticService acousticService;
     private readonly ILedService ledService;
     private readonly ILogger<LabyrinthSolvedState> logger;
 
     public LabyrinthSolvedState(
+        INavigationAcousticService acousticService,
         ILedService ledService,
         ILogger<LabyrinthSolvedState> logger)
     {
+        this.acousticService = acousticService ?? throw new ArgumentNullException(nameof(acousticService));
         this.ledService = ledService ?? throw new ArgumentNullException(nameof(ledService));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -23,6 +26,7 @@ public sealed class LabyrinthSolvedState : INavigationState
 
         logger.LogInformation("Labyrinth successfully exited. Navigation complete.");
         await ledService.SetStatusAsync(NavigationActivityStatus.Solved);
+        await acousticService.PlayMazeSolvedMelodyAsync();
         context.MarkSolved(NavigationState.LabyrinthSolved);
     }
 }

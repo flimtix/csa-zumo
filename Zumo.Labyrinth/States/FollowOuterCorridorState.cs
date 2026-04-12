@@ -6,6 +6,7 @@ namespace Zumo.Labyrinth.States;
 
 public sealed class FollowOuterCorridorState : INavigationState
 {
+    private readonly INavigationAcousticService acousticService;
     private readonly IColorSensorService colorSensorService;
     private readonly INavigationMotionService motionService;
     private readonly ILedService ledService;
@@ -13,12 +14,14 @@ public sealed class FollowOuterCorridorState : INavigationState
     private readonly NavigationOption config;
 
     public FollowOuterCorridorState(
+        INavigationAcousticService acousticService,
         IColorSensorService colorSensorService,
         INavigationMotionService motionService,
         ILedService ledService,
         ILogger<FollowOuterCorridorState> logger,
         IOptions<NavigationOption> options)
     {
+        this.acousticService = acousticService ?? throw new ArgumentNullException(nameof(acousticService));
         this.colorSensorService = colorSensorService ?? throw new ArgumentNullException(nameof(colorSensorService));
         this.motionService = motionService ?? throw new ArgumentNullException(nameof(motionService));
         this.ledService = ledService ?? throw new ArgumentNullException(nameof(ledService));
@@ -33,6 +36,7 @@ public sealed class FollowOuterCorridorState : INavigationState
     public async Task ExecuteAsync(NavigationStateContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
+        var markerTonePlayed = false;
 
         await ledService.SetStatusAsync(NavigationActivityStatus.Scanning);
 
@@ -47,6 +51,12 @@ public sealed class FollowOuterCorridorState : INavigationState
 
             if (IsExitColorDetected())
             {
+                if (!markerTonePlayed)
+                {
+                    await acousticService.PlayMarkDetectedToneAsync();
+                    markerTonePlayed = true;
+                }
+
                 context.TransitionTo(NavigationState.ExitLabyrinth);
                 return;
             }
@@ -79,6 +89,12 @@ public sealed class FollowOuterCorridorState : INavigationState
 
                 if (IsExitColorDetected())
                 {
+                    if (!markerTonePlayed)
+                    {
+                        await acousticService.PlayMarkDetectedToneAsync();
+                        markerTonePlayed = true;
+                    }
+
                     context.TransitionTo(NavigationState.ExitLabyrinth);
                     return;
                 }

@@ -7,6 +7,7 @@ namespace Zumo.Labyrinth.States;
 public sealed class CheckGapState : INavigationState
 {
     private const int DRIVE_FOREVER = 999;
+    private readonly INavigationAcousticService acousticService;
     private readonly IColorSensorService colorSensorService;
     private readonly INavigationDistanceService distanceService;
     private readonly INavigationMotionService motionService;
@@ -15,6 +16,7 @@ public sealed class CheckGapState : INavigationState
     private readonly NavigationOption config;
 
     public CheckGapState(
+        INavigationAcousticService acousticService,
         IColorSensorService colorSensorService,
         INavigationDistanceService distanceService,
         INavigationMotionService motionService,
@@ -22,6 +24,7 @@ public sealed class CheckGapState : INavigationState
         ILogger<CheckGapState> logger,
         IOptions<NavigationOption> options)
     {
+        this.acousticService = acousticService ?? throw new ArgumentNullException(nameof(acousticService));
         this.colorSensorService = colorSensorService ?? throw new ArgumentNullException(nameof(colorSensorService));
         this.distanceService = distanceService ?? throw new ArgumentNullException(nameof(distanceService));
         this.motionService = motionService ?? throw new ArgumentNullException(nameof(motionService));
@@ -46,6 +49,7 @@ public sealed class CheckGapState : INavigationState
 
         if (isCorrectColor)
         {
+            await acousticService.PlayMarkDetectedToneAsync();
             await ledService.SetStatusAsync(NavigationActivityStatus.Scanning);
             await AlignGapCenterAsync();
 
