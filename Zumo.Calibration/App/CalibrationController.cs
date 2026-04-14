@@ -1,4 +1,3 @@
-using Zumo.Library;
 using Zumo.Library.Calibration;
 
 namespace Zumo.Calibration.App;

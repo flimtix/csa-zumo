@@ -3,12 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Zumo.Library;
 using Zumo.Library.Calibration;
-using Zumo.Library.Color;
-using Zumo.Library.Drive;
-using Zumo.Library.Encoder;
-using Zumo.Library.Led;
-using Zumo.Library.Lidar;
-using Zumo.Library.Sound;
 
 var services = new ServiceCollection();
 var navigationConfig = new NavigationOption();
@@ -25,15 +19,15 @@ services.AddLogging(logging =>
     logging.SetMinimumLevel(navigationConfig.LogLevel);
 });
 
-services.AddSingleton<IOptions<NavigationOption>>(Options.Create(navigationConfig));
+services.AddSingleton(Options.Create(navigationConfig));
 
 services.AddSingleton<ZumoRuntime>();
 
-services.AddSingleton<IDriveService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Drive);
-services.AddSingleton<IColorSensorService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().ColorSensor);
-services.AddSingleton<IZumoRgbLedService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().RgbLed);
-services.AddSingleton<ILidar>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Lidar);
-services.AddSingleton<ISoundService>(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Sound);
+services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Drive);
+services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().ColorSensor);
+services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().RgbLed);
+services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Lidar);
+services.AddSingleton(serviceProvider => serviceProvider.GetRequiredService<ZumoRuntime>().Sound);
 
 services.AddSingleton<ILidarAnalyzer, BasicLidarAnalyzer>();
 services.AddSingleton<ILedService, ZumoRgbLedAdapter>();
@@ -51,10 +45,8 @@ services.AddSingleton<INavigationState, ExitLabyrinthState>();
 services.AddSingleton<INavigationState, LabyrinthSolvedState>();
 services.AddSingleton<NavigationStateContext>();
 
-services.AddSingleton<IInnerRingNavigator, InnerRingNavigator>();
-
 using var serviceProvider = services.BuildServiceProvider(validateScopes: true);
-var navigator = serviceProvider.GetRequiredService<IInnerRingNavigator>();
+var navigator = serviceProvider.GetRequiredService<NavigationStateContext>();
 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 var programLogger = loggerFactory.CreateLogger("Program");
 
@@ -65,7 +57,7 @@ ApplyCalibrationProfile(serviceProvider.GetRequiredService<ZumoRuntime>(), progr
 
 // Wait a moment for the runtime to initialize and apply calibration before starting the controller
 await Task.Delay(2000);
-await navigator.RunInnerRingNavigationAsync();
+await navigator.RunAsync();
 
 static void ApplyCalibrationProfile(ZumoRuntime runtime, ILogger logger)
 {

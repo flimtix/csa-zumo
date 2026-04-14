@@ -72,20 +72,6 @@ public sealed class LidarDistanceService : INavigationDistanceService
         return distance;
     }
 
-    public async Task<int> GetFrontLeftDistanceMmAsync()
-    {
-        var snapshot = await CaptureAsync();
-        var distance = snapshot.FrontLeftDistanceMm;
-        return distance;
-    }
-
-    public async Task<int> GetFrontRightDistanceMmAsync()
-    {
-        var snapshot = await CaptureAsync();
-        var distance = snapshot.FrontRightDistanceMm;
-        return distance;
-    }
-
     private NavigationDistanceSnapshot BuildDistanceSnapshot(LidarSnapshot snapshot)
     {
         var frontSector = lidarAnalyzer.AnalyzeSector(

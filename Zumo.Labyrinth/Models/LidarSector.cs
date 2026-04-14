@@ -6,23 +6,19 @@ namespace Zumo.Labyrinth.Models;
 /// </summary>
 public sealed class LidarSector
 {
-    public LidarSector(int startAngleDegrees, int endAngleDegrees, int minDistanceMm, int maxDistanceMm, int averageDistanceMm, int sampleCount)
+    public LidarSector(int minDistanceMm, int maxDistanceMm, int averageDistanceMm, int sampleCount)
     {
         if (sampleCount < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(sampleCount), "Sample count cannot be negative.");
         }
 
-        StartAngleDegrees = startAngleDegrees;
-        EndAngleDegrees = endAngleDegrees;
         MinDistanceMm = minDistanceMm;
         MaxDistanceMm = maxDistanceMm;
         AverageDistanceMm = averageDistanceMm;
         SampleCount = sampleCount;
     }
 
-    public int StartAngleDegrees { get; }
-    public int EndAngleDegrees { get; }
     public int MinDistanceMm { get; }
     public int MaxDistanceMm { get; }
     public int AverageDistanceMm { get; }

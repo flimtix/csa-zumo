@@ -25,10 +25,7 @@ public sealed class NavigationAcousticService : INavigationAcousticService
     public ValueTask PlayMarkDetectedToneAsync()
     {
         QueuePlayback(
-            () => soundService.Beep(
-                config.Acoustic.MarkerDetectedFrequencyHz,
-                config.Acoustic.MarkerDetectedDurationMs,
-                CancellationToken.None),
+            () => soundService.Beep(config.Acoustic.MarkerDetectedFrequencyHz, config.Acoustic.MarkerDetectedDurationMs),
             "mark-detected");
 
         return ValueTask.CompletedTask;
@@ -37,7 +34,7 @@ public sealed class NavigationAcousticService : INavigationAcousticService
     public ValueTask PlayMazeSolvedMelodyAsync()
     {
         QueuePlayback(
-            () => soundService.Play(config.Acoustic.MazeSolvedMelody, CancellationToken.None),
+            () => soundService.Play(config.Acoustic.MazeSolvedMelody),
             "maze-solved");
 
         return ValueTask.CompletedTask;
@@ -45,22 +42,20 @@ public sealed class NavigationAcousticService : INavigationAcousticService
 
     private void QueuePlayback(Action playbackAction, string acousticEventName)
     {
-        if (!config.Acoustic.EnableAcousticFeedback)
+        if (config.Acoustic.EnableAcousticFeedback)
         {
-            return;
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    playbackAction();
+                    logger.LogDebug("Acoustic event queued: {AcousticEventName}", acousticEventName);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogWarning(exception, "Acoustic event failed: {AcousticEventName}", acousticEventName);
+                }
+            });
         }
-
-        _ = Task.Run(() =>
-        {
-            try
-            {
-                playbackAction();
-                logger.LogDebug("Acoustic event queued: {AcousticEventName}", acousticEventName);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception, "Acoustic event failed: {AcousticEventName}", acousticEventName);
-            }
-        });
     }
 }

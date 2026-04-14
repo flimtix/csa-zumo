@@ -2,7 +2,6 @@ using System.Device.Gpio;
 using Zumo.Library.Button;
 using Zumo.Library.Color;
 using Zumo.Library.Com;
-using Zumo.Library.Sensing;
 using Zumo.Library.Drive;
 using Zumo.Library.Encoder;
 using Zumo.Library.Led;
@@ -35,7 +34,7 @@ public sealed class ZumoRuntime : IDisposable
         Cm4Button = new Cm4Button(gpio, runtimeOptions.Cm4ButtonPin);
         Cm4Led = new Cm4Led(gpio, runtimeOptions.Cm4LedPin);
 
-        var lidar = new Cm4Lidar(gpio, runtimeOptions.LidarMotorPin);
+        var lidar = new Cm4Lidar(gpio, runtimeOptions.Lidar);
         lidar.SetPower(true);
         Lidar = lidar;
 

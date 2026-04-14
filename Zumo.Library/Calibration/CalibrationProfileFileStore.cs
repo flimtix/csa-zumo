@@ -104,13 +104,13 @@ public sealed class CalibrationProfileFileStore
             return false;
         }
 
-        if (profile.DistanceCalibrationFactor == 0)
+        if (profile.DistanceCalibrationFactor <= 0)
         {
             error = "DistanceCalibrationFactor must be greater than 0.";
             return false;
         }
 
-        if (profile.RotationCalibrationFactor == 0)
+        if (profile.RotationCalibrationFactor <= 0)
         {
             error = "RotationCalibrationFactor must be greater than 0.";
             return false;

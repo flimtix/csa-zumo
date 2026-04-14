@@ -13,10 +13,7 @@ public sealed class LidarSnapshot
 
     public LidarSnapshot(IReadOnlyList<LidarPoint> points, DateTime capturedAtUtc)
     {
-        if (points is null)
-        {
-            throw new ArgumentNullException(nameof(points));
-        }
+        ArgumentNullException.ThrowIfNull(points, nameof(points));
 
         if (points.Count != 360)
         {
@@ -26,8 +23,6 @@ public sealed class LidarSnapshot
         this.points = points.ToArray();
         this.capturedAtUtc = capturedAtUtc;
     }
-
-    public DateTime CapturedAtUtc => capturedAtUtc;
 
     public LidarPoint GetPointAtAngle(int angle)
     {

@@ -29,7 +29,7 @@ public sealed class NavigationMotionService : INavigationMotionService
 
     public async Task RotateInPlace(int angleDegrees)
     {
-        logger.LogDebug("Turn command: angle={AngleDegrees}.", angleDegrees);
+        logger.LogTrace("Turn command: angle={AngleDegrees}.", angleDegrees);
 
         driveService.SetWheelSpeed(-5, -5);
         driveService.RotateInPlace(
@@ -142,7 +142,7 @@ public sealed class NavigationMotionService : INavigationMotionService
                 }
                 else
                 {
-                    logger.LogDebug("Side-risk correction {Correction}/{MaxCorrections}: angle={CorrectionAngle}.", correction, config.Safety.GapAlignmentMaxCorrections, correctionAngle);
+                    logger.LogTrace("Side-risk correction {Correction}/{MaxCorrections}: angle={CorrectionAngle}.", correction, config.Safety.GapAlignmentMaxCorrections, correctionAngle);
 
                     await RotateInPlace(correctionAngle);
 

@@ -63,7 +63,7 @@ public sealed class BasicLidarAnalyzer : ILidarAnalyzer
             min = 0;
         }
 
-        return new LidarSector(normalizedStart, normalizedEnd, min, max, average, count);
+        return new LidarSector(min, max, average, count);
     }
 
     private int GetSmoothedDistanceMm(LidarSnapshot snapshot, int centerAngle)

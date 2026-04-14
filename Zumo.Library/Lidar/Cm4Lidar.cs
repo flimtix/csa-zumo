@@ -6,7 +6,6 @@ namespace Zumo.Library.Lidar
 {
     public class Cm4Lidar : ILidar, IDisposable
     {
-        private const string PortName = "/dev/ttyAMA4";
         private const int PacketSize = 47;
         private const byte Header1 = 0x54;
         private const byte Header2 = 0x2C;
@@ -14,7 +13,7 @@ namespace Zumo.Library.Lidar
         // Use a 64KB buffer to prevent the OS from dropping new packets if the thread yields
         private const int SerialReadBufferSize = 65536;
 
-        private readonly byte[] _crc8Table = {
+        private static readonly byte[] crc8Table = [
             0x00, 0x4d, 0x9a, 0xd7, 0x79, 0x34, 0xe3, 0xae, 0xf2, 0xbf, 0x68, 0x25, 0x8b, 0xc6, 0x11, 0x5c,
             0xa9, 0xe4, 0x33, 0x7e, 0xd0, 0x9d, 0x4a, 0x07, 0x5b, 0x16, 0xc1, 0x8c, 0x22, 0x6f, 0xb8, 0xf5,
             0x1f, 0x52, 0x85, 0xc8, 0x66, 0x2b, 0xfc, 0xb1, 0xed, 0xa0, 0x77, 0x3a, 0x94, 0xd9, 0x0e, 0x43,
@@ -31,79 +30,78 @@ namespace Zumo.Library.Lidar
             0xeb, 0xa6, 0x71, 0x3c, 0x92, 0xdf, 0x08, 0x45, 0x19, 0x54, 0x83, 0xce, 0x60, 0x2d, 0xfa, 0xb7,
             0x5d, 0x10, 0xc7, 0x8a, 0x24, 0x69, 0xbe, 0xf3, 0xaf, 0xe2, 0x35, 0x78, 0xd6, 0x9b, 0x4c, 0x01,
             0xf4, 0xb9, 0x6e, 0x23, 0x8d, 0xc0, 0x17, 0x5a, 0x06, 0x4b, 0x9c, 0xd1, 0x7f, 0x32, 0xe5, 0xa8
-        };
+        ];
 
-        private readonly SerialPort _serialPort;
-        private readonly GpioController _gpio;
+        private readonly SerialPort serialPort;
+        private readonly GpioController gpio;
         private readonly int pin;
-        private readonly PwmChannel _pwm;
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private readonly Task _readTask;
+        private readonly PwmChannel pwm;
+        private readonly CancellationTokenSource cts = new();
+        private readonly Task readTask;
 
-        private LidarPoint[] _currentScan = new LidarPoint[360];
-        private volatile TaskCompletionSource<IReadOnlyList<LidarPoint>> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly LidarPoint[] currentScan = new LidarPoint[360];
+        private volatile TaskCompletionSource<IReadOnlyList<LidarPoint>> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        private int _lastAngle = 0;
-        private bool _disposed;
+        private int lastAngle = 0;
+        private bool disposed;
 
-        public Cm4Lidar(GpioController gpio, int pin)
+        public Cm4Lidar(GpioController gpio, LidarRuntimeOptions options)
         {
-            _gpio = gpio ?? throw new ArgumentNullException(nameof(gpio));
-            this.pin = pin;
+            this.gpio = gpio ?? throw new ArgumentNullException(nameof(gpio));
+            pin = options.MotorPin;
 
-            _gpio.OpenPin(pin, PinMode.Output);
+            gpio.OpenPin(pin, PinMode.Output);
 
-            _pwm = PwmChannel.Create(0, 0);
+            pwm = PwmChannel.Create(0, 0);
 
             InitializeCurrentScan();
 
-            _serialPort = new SerialPort(PortName, 230400)
+            serialPort = new SerialPort(options.PortName, options.BaudRate)
             {
                 ReadBufferSize = SerialReadBufferSize
             };
-
-            _serialPort.Open();
+            serialPort.Open();
 
             SetPower(true);
 
             // Clear any old garbage data from the OS buffer before we start parsing
-            _serialPort.DiscardInBuffer();
+            serialPort.DiscardInBuffer();
 
-            _readTask = Task.Run(() => ReadLoopAsync(_cts.Token));
+            readTask = Task.Run(() => ReadLoopAsync(cts.Token));
         }
 
         public async Task<IReadOnlyList<LidarPoint>> GetFullScanAsync(CancellationToken ct = default)
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
+            ObjectDisposedException.ThrowIf(disposed, this);
 
             // WaitAsync allows the caller to cancel their await without destroying the shared TCS
-            return await _tcs.Task.WaitAsync(ct);
+            return await tcs.Task.WaitAsync(ct);
         }
 
         public void SetPower(bool enable)
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
+            ObjectDisposedException.ThrowIf(disposed, this);
 
             if (enable)
             {
-                _gpio.Write(pin, PinValue.High);
+                gpio.Write(pin, PinValue.High);
                 Thread.Sleep(100);
 
                 // 4kHz, 50% DC sets the LiDAR to Internal Speed Control Mode (Target: 10Hz)
-                _pwm.Frequency = 4000;
-                _pwm.DutyCycle = 0.5;
-                _pwm.Start();
+                pwm.Frequency = 4000;
+                pwm.DutyCycle = 0.5;
+                pwm.Start();
             }
             else
             {
                 // 7kHz switches the LiDAR safely to Standby Mode
-                _pwm.Frequency = 7000;
-                _pwm.DutyCycle = 0.5;
-                _pwm.Start();
+                pwm.Frequency = 7000;
+                pwm.DutyCycle = 0.5;
+                pwm.Start();
                 Thread.Sleep(100);
-                _pwm.Stop();
+                pwm.Stop();
 
-                _gpio.Write(pin, PinValue.Low);
+                gpio.Write(pin, PinValue.Low);
             }
         }
 
@@ -116,11 +114,12 @@ namespace Zumo.Library.Lidar
             {
                 try
                 {
-                    int bytesRead = await _serialPort.BaseStream.ReadAsync(buffer.AsMemory(bufferLength), ct);
-                    if (bytesRead == 0) continue;
-
-                    bufferLength += bytesRead;
-                    bufferLength = ProcessBuffer(buffer, bufferLength);
+                    int bytesRead = await serialPort.BaseStream.ReadAsync(buffer.AsMemory(bufferLength), ct);
+                    if (bytesRead > 0)
+                    {
+                        bufferLength += bytesRead;
+                        bufferLength = ProcessBuffer(buffer, bufferLength);
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -175,12 +174,12 @@ namespace Zumo.Library.Lidar
             return remainingBytes;
         }
 
-        private bool VerifyCrc(byte[] buffer, int startIndex)
+        private static bool VerifyCrc(byte[] buffer, int startIndex)
         {
             byte crc = 0;
             for (int i = 0; i < PacketSize - 1; i++)
             {
-                crc = _crc8Table[(crc ^ buffer[startIndex + i]) & 0xFF];
+                crc = crc8Table[(crc ^ buffer[startIndex + i]) & 0xFF];
             }
             return crc == buffer[startIndex + PacketSize - 1];
         }
@@ -206,32 +205,32 @@ namespace Zumo.Library.Lidar
                 ushort distance = (ushort)(buffer[pointOffset] | (buffer[pointOffset + 1] << 8));
                 byte intensity = buffer[pointOffset + 2];
 
-                _currentScan[currentAngle] = new LidarPoint(distance, intensity);
+                currentScan[currentAngle] = new LidarPoint(distance, intensity);
             }
         }
 
         private void CheckForFullRotation(int currentAngle)
         {
             // Detect angle wrap-around indicating a full sweep
-            if (currentAngle < _lastAngle && _lastAngle > 300 && currentAngle < 50)
+            if (currentAngle < lastAngle && lastAngle > 300 && currentAngle < 50)
             {
                 var completedScan = new LidarPoint[360];
-                Array.Copy(_currentScan, completedScan, 360);
+                Array.Copy(currentScan, completedScan, 360);
 
-                var oldTcs = Interlocked.Exchange(ref _tcs, new TaskCompletionSource<IReadOnlyList<LidarPoint>>(TaskCreationOptions.RunContinuationsAsynchronously));
+                var oldTcs = Interlocked.Exchange(ref tcs, new TaskCompletionSource<IReadOnlyList<LidarPoint>>(TaskCreationOptions.RunContinuationsAsynchronously));
                 oldTcs.TrySetResult(completedScan);
 
                 InitializeCurrentScan();
             }
 
-            _lastAngle = currentAngle;
+            lastAngle = currentAngle;
         }
 
         private void InitializeCurrentScan()
         {
-            for (int i = 0; i < _currentScan.Length; i++)
+            for (int i = 0; i < currentScan.Length; i++)
             {
-                _currentScan[i] = new LidarPoint(null, 0);
+                currentScan[i] = new LidarPoint(null, 0);
             }
         }
 
@@ -243,7 +242,7 @@ namespace Zumo.Library.Lidar
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposed)
+            if (!disposed)
             {
                 if (disposing)
                 {
@@ -251,19 +250,19 @@ namespace Zumo.Library.Lidar
                     try { SetPower(false); } catch { /* Ignore on teardown */ }
 
                     // 2. Stop the background loop
-                    _cts.Cancel();
-                    try { _readTask.Wait(500); } catch { /* Ignore task cancellations */ }
+                    cts.Cancel();
+                    try { readTask.Wait(500); } catch { /* Ignore task cancellations */ }
 
                     // 3. Complete TCS so awaiting callers don't hang indefinitely
-                    _tcs.TrySetCanceled();
+                    tcs.TrySetCanceled();
 
                     // 4. Dispose unmanaged/managed hardware resources
-                    _cts.Dispose();
-                    _serialPort?.Dispose();
-                    _pwm?.Dispose();
+                    cts.Dispose();
+                    serialPort?.Dispose();
+                    pwm?.Dispose();
                 }
 
-                _disposed = true;
+                disposed = true;
             }
         }
     }
