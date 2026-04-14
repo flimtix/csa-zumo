@@ -37,7 +37,7 @@ namespace Zumo.Library.Lidar
         private readonly int pin;
         private readonly PwmChannel pwm;
         private readonly CancellationTokenSource cts = new();
-        private readonly Task readTask;
+        private readonly Thread readThread;
 
         private readonly LidarPoint[] currentScan = new LidarPoint[360];
         private volatile TaskCompletionSource<IReadOnlyList<LidarPoint>> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -58,7 +58,7 @@ namespace Zumo.Library.Lidar
 
             serialPort = new SerialPort(options.PortName, options.BaudRate)
             {
-                ReadBufferSize = SerialReadBufferSize
+                ReadBufferSize = SerialReadBufferSize,
             };
             serialPort.Open();
 
@@ -67,7 +67,12 @@ namespace Zumo.Library.Lidar
             // Clear any old garbage data from the OS buffer before we start parsing
             serialPort.DiscardInBuffer();
 
-            readTask = Task.Run(() => ReadLoopAsync(cts.Token));
+            readThread = new Thread(() => ReadLoop(cts.Token))
+            {
+                IsBackground = true,
+                Name = "Cm4Lidar.ReadLoop"
+            };
+            readThread.Start();
         }
 
         public async Task<IReadOnlyList<LidarPoint>> GetFullScanAsync(CancellationToken ct = default)
@@ -105,7 +110,7 @@ namespace Zumo.Library.Lidar
             }
         }
 
-        private async Task ReadLoopAsync(CancellationToken ct)
+        private void ReadLoop(CancellationToken ct)
         {
             byte[] buffer = new byte[8192];
             int bufferLength = 0;
@@ -114,12 +119,16 @@ namespace Zumo.Library.Lidar
             {
                 try
                 {
-                    int bytesRead = await serialPort.BaseStream.ReadAsync(buffer.AsMemory(bufferLength), ct);
+                    int bytesRead = serialPort.Read(buffer, bufferLength, buffer.Length - bufferLength);
                     if (bytesRead > 0)
                     {
                         bufferLength += bytesRead;
                         bufferLength = ProcessBuffer(buffer, bufferLength);
                     }
+                }
+                catch (TimeoutException)
+                {
+                    // Periodically wake to observe cancellation.
                 }
                 catch (OperationCanceledException)
                 {
@@ -127,9 +136,14 @@ namespace Zumo.Library.Lidar
                 }
                 catch (Exception ex)
                 {
+                    if (ct.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     Console.WriteLine($"LiDAR Read Error: {ex.Message}");
                     bufferLength = 0; // Clear buffer on severe error and resume
-                    await Task.Delay(100, ct);
+                    Thread.Sleep(100);
                 }
             }
         }
@@ -249,9 +263,10 @@ namespace Zumo.Library.Lidar
                     // 1. Safely stop hardware
                     try { SetPower(false); } catch { /* Ignore on teardown */ }
 
-                    // 2. Stop the background loop
+                    // 2. Stop the background thread
                     cts.Cancel();
-                    try { readTask.Wait(500); } catch { /* Ignore task cancellations */ }
+                    try { serialPort?.Close(); } catch { /* Ignore on teardown */ }
+                    try { readThread.Join(500); } catch { /* Ignore on teardown */ }
 
                     // 3. Complete TCS so awaiting callers don't hang indefinitely
                     tcs.TrySetCanceled();
