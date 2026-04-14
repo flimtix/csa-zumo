@@ -36,7 +36,6 @@ public sealed class FollowOuterCorridorState : INavigationState
     public async Task ExecuteAsync(NavigationStateContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        var markerTonePlayed = false;
 
         await ledService.SetStatusAsync(NavigationActivityStatus.Scanning);
 
@@ -51,12 +50,7 @@ public sealed class FollowOuterCorridorState : INavigationState
 
             if (IsExitColorDetected())
             {
-                if (!markerTonePlayed)
-                {
-                    await acousticService.PlayMarkDetectedToneAsync();
-                    markerTonePlayed = true;
-                }
-
+                await acousticService.PlayMarkDetectedToneAsync();
                 context.TransitionTo(NavigationState.ExitLabyrinth);
                 return;
             }
@@ -89,12 +83,7 @@ public sealed class FollowOuterCorridorState : INavigationState
 
                 if (IsExitColorDetected())
                 {
-                    if (!markerTonePlayed)
-                    {
-                        await acousticService.PlayMarkDetectedToneAsync();
-                        markerTonePlayed = true;
-                    }
-
+                    await acousticService.PlayMarkDetectedToneAsync();
                     context.TransitionTo(NavigationState.ExitLabyrinth);
                     return;
                 }

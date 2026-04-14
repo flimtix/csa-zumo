@@ -50,17 +50,28 @@ public sealed class CheckGapState : INavigationState
         if (isCorrectColor)
         {
             await acousticService.PlayMarkDetectedToneAsync();
-            await ledService.SetStatusAsync(NavigationActivityStatus.Scanning);
-            await AlignGapCenterAsync();
 
-            await ledService.SetStatusAsync(NavigationActivityStatus.Blocked);
+            // IDEA: If the paper is as big as the gap, we drive till we stop seeing the paper, then turn around and drive half the distance back, which should put us in the middle of the gap.
+            // Then we align ourselv to the inner wall and make sure to drive straight through the gap.
+            // In the presentation the paper was so small that we could just turn 90 degrees and drive straight.
+            // But in the actual labyrinth the paper is quite big, so we might need to do some alignment to make sure we are in the middle of the gap and not too close to one of the walls.
+            //
+            // await ledService.SetStatusAsync(NavigationActivityStatus.Scanning);
+            // await AlignGapCenterAsync();
+
+            // await ledService.SetStatusAsync(NavigationActivityStatus.Blocked);
+            // await motionService.RotateInPlace(90);
+            // await motionService.CalibrateAgainstFrontWallAsync();
+
+            // await ledService.SetStatusAsync(NavigationActivityStatus.Turning);
+            // await TrunAroundAsync();
+
+            await Task.Delay(config.Motion.TurnSettleDelay);
             await motionService.RotateInPlace(90);
-            await motionService.CalibrateAgainstFrontWallAsync();
-
-            await ledService.SetStatusAsync(NavigationActivityStatus.Turning);
-            await TrunAroundAsync();
+            await Task.Delay(config.Motion.TurnSettleDelay);
 
             await ledService.SetStatusAsync(NavigationActivityStatus.DrivingStraight);
+
             var stopReason = SafeDriveStopReason.CollisionRisk;
             for (int attempt = 1; attempt <= config.Navigation.GapDetectionMaxAttempts; attempt++)
             {
@@ -140,6 +151,6 @@ public sealed class CheckGapState : INavigationState
         await Task.Delay(config.Motion.TurnSettleDelay);
         await motionService.RotateInPlace(90);
         await Task.Delay(config.Motion.TurnSettleDelay);
-        await motionService.RotateInPlace(5);
+        // await motionService.RotateInPlace(-5);
     }
 }

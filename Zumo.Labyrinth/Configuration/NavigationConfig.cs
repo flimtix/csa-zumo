@@ -21,8 +21,8 @@ public sealed class NavigationBehaviorOption
 {
     public int WallThresholdMm { get; init; } = 150;
     public int GapThresholdMm { get; init; } = 250;
-    public int GapCheckDriveInMm { get; init; } = 25;
-    public int GapDetectionMaxAttempts { get; init; } = 20;
+    public int GapCheckDriveInMm { get; init; } = 10;
+    public int GapDetectionMaxAttempts { get; init; } = 25;
     public int SideRiskFallbackTurnDegrees { get; init; } = 25;
     public int InnerRingEntryWallMissingMm { get; init; } = 300;
     public int InnerRingEntryDriveInMm { get; init; } = 60;
@@ -73,7 +73,7 @@ public sealed class NavigationCalibrationOption
 {
     public int WallCalibrationDistanceMm { get; init; } = 80;
     public int WallCalibrationApproachStepMm { get; init; } = 15;
-    public int WallAlignmentToleranceMm { get; init; } = 10;
+    public int WallAlignmentToleranceMm { get; init; } = 5;
     public int WallAlignmentTurnStepDegrees { get; init; } = 5;
     public int WallAlignmentMaxIterations { get; init; } = 25;
 }
@@ -82,12 +82,12 @@ public sealed class NavigationAcousticOption
 {
     public bool EnableAcousticFeedback { get; init; } = true;
     public ushort MarkerDetectedFrequencyHz { get; init; } = 1400;
-    public ushort MarkerDetectedDurationMs { get; init; } = 220;
+    public ushort MarkerDetectedDurationMs { get; init; } = 320;
     public SoundItem MazeSolvedMelody { get; init; } = SoundItem.SuperMario;
 }
 
 public sealed class LibraryOption
 {
-    public FloorColorClassification InnerRingFloorColor { get; init; } = FloorColorClassification.Blue;
-    public FloorColorClassification OuterRingFloorColor { get; init; } = FloorColorClassification.Yellow;
+    public FloorColorClassification InnerRingFloorColor { get; init; } = FloorColorClassification.Red;
+    public FloorColorClassification OuterRingFloorColor { get; init; } = FloorColorClassification.Green;
 }
