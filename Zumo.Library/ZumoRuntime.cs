@@ -33,10 +33,7 @@ public sealed class ZumoRuntime : IDisposable
 
         Cm4Button = new Cm4Button(gpio, runtimeOptions.Cm4ButtonPin);
         Cm4Led = new Cm4Led(gpio, runtimeOptions.Cm4LedPin);
-
-        var lidar = new Cm4Lidar(gpio, runtimeOptions.Lidar);
-        lidar.SetPower(true);
-        Lidar = lidar;
+        Lidar = new Cm4Lidar(gpio, runtimeOptions.Lidar);
 
         Ping = new PingService(Broker, runtimeOptions.DefaultRequestTimeout);
         Drive = new ZumoDriveService(Broker, runtimeOptions.DefaultRequestTimeout);

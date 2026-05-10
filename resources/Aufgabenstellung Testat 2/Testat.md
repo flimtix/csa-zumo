@@ -11,6 +11,19 @@ Der Roboter muss vordefinierte Routen autonom abfahren können. Dabei gelten fol
 - **Kollisionsvermeidung:** Während der Fahrt muss das Lidar aktiv sein. Sobald ein Hindernis in Fahrtrichtung in einer vordefinierten, ausreichend grossen Distanz erkannt wird, muss der Roboter sofort anhalten.
 - **Energie-Management:** Das Lidar muss am Ende der Fahrt (egal ob Ziel erreicht oder durch Hindernis gestoppt) zwingend wieder ausgeschaltet werden.
 
+### Art der Steuerung
+Es wird **keine** Live-Steuerung (WASD) und **kein** Upload von komplexen Befehlsdateien (z.B. "Fahre Links, Fahre Rechts") gefordert. 
+Die Fahrstrecken sind bereits fest im C#-Code einprogrammiert (z.B. in der Klasse `ZumoDrives`). Der Client dient lediglich als drahtloser "Startknopf", um eine dieser vordefinierten Strecken fernzuzünden.
+
+### Warum rohes TCP? (Didaktischer Hintergrund)
+Dass für die Übermittlung eines einzelnen Buchstabens ein TCP-Socket anstelle einer modernen REST-API verwendet wird, hat einen reinen Lernzweck: Es soll das Verständnis für grundlegende Socket-Programmierung bewiesen werden. Die Nutzdaten (Payload) werden absichtlich minimal gehalten (`"A"`, `"B"`, `"C"`), damit der Fokus vollständig auf der korrekten Handhabung der Netzwerk-Architektur liegt (`TcpListener`, Streams lesen/schreiben, Ressourcen sauber schliessen).
+
+### Kommunikationsablauf (Iterativer TCP-Server)
+1. **Verbindungsaufbau:** Ein Client (z.B. Telnet oder Netcat) verbindet sich über einen definierten Port mit dem Roboter.
+2. **Prompt:** Der TCP-Server auf dem Roboter sendet sofort eine Textaufforderung an den Client (z.B. `"Wähle eine Strecke: A, B oder C und drücke Enter..."`).
+3. **Eingabe:** Der Benutzer sendet genau einen Buchstaben (z.B. `"A"`).
+4. **Verarbeitung:** Der Server liest den Stream, schliesst die TCP-Verbindung (oder beendet den Dialog), ordnet den Buchstaben der entsprechenden Route aus `ZumoDrives` zu und startet die physische Fahrt.
+
 ## 3. Protokollierung (Logging)
 Jede durchgeführte Fahrt muss zwingend als ASCII-Textdatei auf dem Dateisystem des Roboters gespeichert werden, damit sie später vom HTTP-Server ausgeliefert werden kann.
 
@@ -20,6 +33,35 @@ Jede durchgeführte Fahrt muss zwingend als ASCII-Textdatei auf dem Dateisystem 
 - **Zeile 2:** Aktuelles Datum und Uhrzeit (z.B. `// 04/05/2026 11:02:39`).
 - **Zeile 3:** Bestätigung des initialen Verbindungschecks (z.B. `5<D1Ping`).
 - **Folgende Zeilen:** Die exakten UART-Antwortstrings jedes erfolgreich ausgeführten Fahrbefehls.
+
+Beispiel Protokolldatei:
+```txt
+// Roger Diehl 
+// 04/05/2026 11:02:39 
+5<D1Ping 
+5<24C01F40064006400 
+5<24A008700640064 
+5<24C02BC0064006400 
+5<24AFF7900640064 
+5<24C01F40064006400 
+5<24AFF7900640064 
+5<24C02BC0064006400
+```
+
+Protokoll mit Abbruch:
+```txt
+// Roger Diehl 
+// 04/05/2026 11:05:12 
+5<D1Ping 
+5<24C01F40064006400 
+5<24A008700640064 
+5<24C02BC0064006400 
+5<24A008700640064 
+5<24C01F40064006400 
+5<24A008700640064 
+5<24C02BC0064006400 
+5<24100000000...Stop
+```
 
 ### Abbruch-Szenarien:
 - **Ordentliches Ende:** Das Log endet mit dem Antwortstring des letzten Fahrbefehls.

@@ -83,7 +83,7 @@ namespace Zumo.Library.Lidar
             return await tcs.Task.WaitAsync(ct);
         }
 
-        public void SetPower(bool enable)
+        private void SetPower(bool enable)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
 
