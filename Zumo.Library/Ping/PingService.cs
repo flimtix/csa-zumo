@@ -17,17 +17,19 @@ public sealed class PingService : IPingService
         this.timeout = timeout ?? TimeSpan.FromMilliseconds(500);
     }
 
-    public bool DoPing(CancellationToken cancellationToken)
+    public bool Ping(CancellationToken cancellationToken)
     {
         ProtocolFrame response = broker.SendRequest(
             PingAddress,
             PingSdf,
-            MessageType.SetRequest,
+            MessageType.GetRequest,
             "Ping",
             timeout,
             cancellationToken);
 
-        bool isValidResponse = response.Type == MessageType.SetResponse && response.Address == PingAddress && string.Equals(response.Payload, "Ping", StringComparison.Ordinal);
+        var isValidResponse = response.Type == MessageType.GetResponse
+            && response.Address == PingAddress
+            && string.Equals(response.Payload, "Ping", StringComparison.OrdinalIgnoreCase);
         return isValidResponse;
     }
 }

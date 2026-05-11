@@ -15,15 +15,15 @@ public sealed class PingServiceTests
         broker.Setup(x => x.SendRequest(
                 0xD1,
                 0x0,
-                MessageType.SetRequest,
+                MessageType.GetRequest,
                 "Ping",
                 TimeSpan.FromMilliseconds(500),
                 CancellationToken.None))
-            .Returns(new ProtocolFrame(0xD1, MessageType.SetResponse, 0x0, "Ping", ""));
+            .Returns(new ProtocolFrame(0xD1, MessageType.GetResponse, 0x0, "Ping", ""));
 
         PingService sut = new(broker.Object);
 
-        bool result = sut.DoPing(CancellationToken.None);
+        bool result = sut.Ping(CancellationToken.None);
 
         Assert.IsTrue(result);
         broker.VerifyAll();
@@ -36,15 +36,15 @@ public sealed class PingServiceTests
         broker.Setup(x => x.SendRequest(
                 0xD1,
                 0x0,
-                MessageType.SetRequest,
+                MessageType.GetRequest,
                 "Ping",
                 TimeSpan.FromMilliseconds(500),
                 CancellationToken.None))
-            .Returns(new ProtocolFrame(0xD1, MessageType.SetResponse, 0x0, "Pong", ""));
+            .Returns(new ProtocolFrame(0xD1, MessageType.GetResponse, 0x0, "Pong", ""));
 
         PingService sut = new(broker.Object);
 
-        bool result = sut.DoPing(CancellationToken.None);
+        bool result = sut.Ping(CancellationToken.None);
 
         Assert.IsFalse(result);
         broker.VerifyAll();
