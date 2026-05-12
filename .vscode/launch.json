@@ -9,8 +9,9 @@
             "type": "pickString",
             "description": "Select the application to debug",
             "options": [
+                "Zumo.Calibration",
                 "Zumo.Labyrinth",
-                "Zumo.Calibration"
+                "Zumo.RemoteControl",
             ],
             "default": "Zumo.Labyrinth"
         }

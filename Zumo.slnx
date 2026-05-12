@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/tests/">
     <Project Path="tests/Zumo.Library.Test/Zumo.Library.Test.csproj" />
+    <Project Path="tests/Zumo.RemoteControl.Test/Zumo.RemoteControl.Test.csproj" />
   </Folder>
   <Project Path="Zumo.Calibration/Zumo.Calibration.csproj" />
   <Project Path="Zumo.Labyrinth/Zumo.Labyrinth.csproj" />
+  <Project Path="Zumo.RemoteControl/Zumo.RemoteControl.csproj" />
   <Project Path="Zumo.Library/Zumo.Library.csproj" />
 </Solution>
