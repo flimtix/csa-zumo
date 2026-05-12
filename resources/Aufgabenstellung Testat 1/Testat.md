@@ -36,7 +36,7 @@ Der Zumo Robot soll mit Hilfe des LiDAR-Sensors selbstständig den Weg aus einem
 - Öffnungen sind nur dann zulässig, wenn sie am Boden markiert sind.
 - Erlaubte Markierungen:
   - rot: innerer Ring
-  - grün: äußerer Ring
+  - grün: äusserer Ring
 
 ### Verbot
 - Unmarkierte Öffnungen dürfen nicht durchfahren werden.

@@ -1,7 +1,7 @@
 Der Plan ist in logische Phasen unterteilt und berücksichtigt die Ungenauigkeiten der Hardware durch ein fehlertolerantes, reaktives Verhalten (Continuous Checking) in Kombination mit dem Always-Right-Algorithmus.
 
 ### 1. Initialisierung und Start-Bedingung
-*   **Wartestatus (Idle):** Das System startet in einem Ruhemodus. Die hintere LED leuchtet in einer neutralen Farbe (z. B. Weiß), um die Bereitschaft zu signalisieren.
+*   **Wartestatus (Idle):** Das System startet in einem Ruhemodus. Die hintere LED leuchtet in einer neutralen Farbe (z. B. Weiss), um die Bereitschaft zu signalisieren.
 *   **Aktivierung:** Das System blockiert jegliche Navigation, bis ein Klick auf den Start-Button am CM4 registriert wird.
 *   **Start-Setup:** Nach dem Klick wechselt die hintere LED die Farbe (z. B. auf Blau für "Initialisierung"). Das dynamische Grid wird im Speicher mit dem Startpunkt (0,0) und der initialen Blickrichtung (Süden/Unten) angelegt.
 
@@ -22,7 +22,7 @@ Da feste Distanzen und Rotationen ungenau sind, darf der Roboter niemals "blind"
 
 ### 4. Dynamischer Kartenaufbau und Kreuzungserkennung
 Das Raster wird nicht durch fixe Koordinaten, sondern durch das Erkennen von topologischen Knotenpunkten (Zellen) aufgebaut.
-*   **Erkennen einer Kreuzung:** Der Roboter weiß, dass er eine neue Zelle/Kreuzung erreicht hat, wenn entweder die Wand frontal einen kritischen Mindestabstand unterschreitet, oder wenn der LiDAR plötzlich links oder rechts einen drastischen Anstieg der Distanz misst (eine Lücke taucht auf).
+*   **Erkennen einer Kreuzung:** Der Roboter weiss, dass er eine neue Zelle/Kreuzung erreicht hat, wenn entweder die Wand frontal einen kritischen Mindestabstand unterschreitet, oder wenn der LiDAR plötzlich links oder rechts einen drastischen Anstieg der Distanz misst (eine Lücke taucht auf).
 *   **Grid-Update:** An einer solchen Kreuzung hält der Roboter an. Die aktuelle Position wird im dynamischen Raster als besuchte Zelle markiert.
 *   **Scan-Phase:** Aus dem Stand wird per LiDAR geprüft, in welche Richtungen (Links, Rechts, Geradeaus) physische Lücken existieren. Diese Lücken werden als "potenzielle Wege" im Grid für diese Zelle vermerkt.
 

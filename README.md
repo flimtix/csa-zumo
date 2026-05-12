@@ -9,7 +9,7 @@ Ziel dieses Projekts ist es, einen kleinen Roboter so zu steuern, dass er selbst
 ### Erfüllungskriterien
 - Start in der Mitte (Blickrichtung nach unten).
 - Kein Wandkontakt (Fehlertolerante Navigation).
-- Ausschließlich markierte Wege befahren (Rot = Erlaubter Ringwechsel, Grün = Ausgang, Grau = Sackgasse).
+- Ausschliesslich markierte Wege befahren (Rot = Erlaubter Ringwechsel, Grün = Ausgang, Grau = Sackgasse).
 - Visuelles Feedback über die hintere RGB-LED während der Navigation.
 - Akustisches Feedback beim Erkennen von Markierungen und beim Lösen des Labyrinths.
 
@@ -39,7 +39,7 @@ Die Architektur der Library ist nach einem 5-Schichten-Modell aufgebaut:
 
 ## 🗺 Das Labyrinth & Wegfindung
 
-Das Labyrinth besteht aus drei ineinanderliegenden Ringen (Ebenen). Die Wandelemente sind ca. 200mm lang (Toleranzen bis zu 30mm Spaltmaß).
+Das Labyrinth besteht aus drei ineinanderliegenden Ringen (Ebenen). Die Wandelemente sind ca. 200mm lang (Toleranzen bis zu 30mm Spaltmass).
 
 ```text
 🟩-------------------------------------⬜
@@ -62,7 +62,7 @@ Das System tastet sich in extrem kleinen Schritten (z.B. 5cm) vorwärts und zent
 1. **Kreuzungserkennung:** Der LiDAR erkennt physische Lücken im Gang.
 2. **Farbvalidierung:** Der Roboter dreht sich in die priorisierte Lücke (Rechte-Hand-Regel), fährt ein kleines Stück hinein und scannt den Boden.
 3. **Entscheidung:**
-   - **Rot:** Korrekter Übergang in den äußeren Ring. Der Weg wird in die Karte übernommen.
+   - **Rot:** Korrekter Übergang in den äusseren Ring. Der Weg wird in die Karte übernommen.
    - **Grau / Keine Farbe:** Sackgasse. Der Roboter setzt zurück und probiert den nächsten Weg.
    - **Grün:** Ausgang gefunden! Die Melodie wird abgespielt.
 
@@ -82,7 +82,7 @@ Befehle folgen dem Muster `5>...` (Set) oder `5?...` (Get). Antworten kommen als
 **Beispiele unterstützter Domänen:**
 - **Antrieb (0x24):** Streckenfahrt (`5>242...`), Drehen auf der Stelle, Konstante Radgeschwindigkeiten.
 - **Odometrie (0x22):** Quadraturdistanz, Kalibrierungsfaktoren setzen (`5>221NNNN`).
-- **Farbsensor (0x31):** Farbton in Grad (`5?310`), Schwarz/Weiß Kalibrierung (`5>31600`).
+- **Farbsensor (0x31):** Farbton in Grad (`5?310`), Schwarz/Weiss Kalibrierung (`5>31600`).
 - **RGB-LEDs (0x11/0x12):** Bitmasken und Hex-Farbwerte setzen.
 - **Sound (0x50):** Frequenz-Piepsen oder vordefinierte Melodien abspielen (`0` = Knight Rider, `2` = Super Mario).
 
@@ -114,3 +114,63 @@ Für den reibungslosen Workflow ist in der `.csproj` ein Post-Build-Event konfig
 > Einstellungen für das Deployment können im `deploy.sh` vorgenommen werden.
 
 *Hinweis: Dieser Schritt wird während CI/CD-Pipelines (z.B. GitHub Actions) automatisch übersprungen.*
+
+---
+
+# Zumo Remote Control
+
+Ein C# / .NET 10 System zur Fernsteuerung des Zumo Roboters via WLAN (TCP/IP).
+
+## 🎯 1. Projektbeschreibung & Ziel
+Das Projekt ermöglicht die Fernsteuerung des Zumo Roboters via WLAN (TCP/IP). Es führt vordefinierte Fahrstrecken (A, B, C) aus, bietet eine automatische Hinderniserkennung (Kollisionsvermeidung) via LiDAR und protokolliert die UART-Fahrbefehle in einer Textdatei.
+
+## 🏗 2. Architektur & Komponenten
+- **Iterativer TCP-Control-Server:** Nimmt über Telnet/Netcat einfache Befehle ('A', 'B', 'C') entgegen, startet die entsprechende Route und blockiert weitere Eingaben, bis die Fahrt beendet ist. Am Ende wird ein direkter HTTP-Download-Link zum generierten Logfile im Terminal ausgegeben.
+- **Nebenläufiger HTTP-File-Server:** Ein von Grund auf (mit `TcpListener`, ohne ASP.NET) entwickelter Webserver. Er nutzt explizite Threads für eingehende Verbindungen und limitiert die maximal gleichzeitigen Downloads (Concurrency) über ein konfigurierbares `SemaphoreSlim`.
+- **Lidar Safety Monitor:** Läuft asynchron während der Fahrt. Erkennt der Lidar ein Hindernis, wird die Fahrt per UART sofort gestoppt. Um Hardwareressourcen zu schonen, wird der Lidar nur während der aktiven Fahrt eingeschaltet.
+- **Logger:** Schreibt die absolvierten Fahrbefehle in ein strikt formatiertes ASCII-Logfile (ohne Leerzeilen, mit Studenten-Name und Datum im Header) in einen dedizierten Ordner. Wurde die Fahrt durch ein Hindernis abgebrochen, endet das Log mit einem klaren "...Stop" Marker.
+
+## ⚙️ 3. Konfiguration (Options)
+Das System ist über das Options-Pattern (Configuration) hochgradig anpassbar. Konfigurierbare Parameter sind unter anderem:
+- **TCP-Port:** Für den iterativen TCP-Control-Server (Standard: 9000).
+- **HTTP-Port:** Für den nebenläufigen HTTP-File-Server.
+- **Lidar-Sicherheitsdistanz:** Schwellenwert in Millimetern für die Hinderniserkennung und den Fahrtabbruch.
+- **MaxConcurrentDownloads:** Begrenzt die parallel laufenden Datei-Downloads des HTTP-Servers mithilfe eines `SemaphoreSlim`.
+
+## 🚀 4. Anleitung zur Bedienung (Usage)
+1. **Server-App starten:** Das kompilierte Projekt `Zumo.RemoteControl` auf dem Raspberry Pi ausführen.
+2. **Mit TCP-Server verbinden:** Von einem Steuerungs-Rechner aus via Netcat die Verbindung aufbauen:
+   ```bash
+   nc <Roboter-IP> 9000
+   ```
+3. **Strecke auswählen:** Den gewünschten Fahrbefehl (z.B. `A`) in das Terminal eingeben und mit Enter bestätigen. Der Roboter fährt nun die festgelegte Strecke ab.
+4. **Log herunterladen:** Nach fehlerfreiem Abschluss oder Lidar-Intervention wird ein Link generiert. Das Log kann dann einfach via Browser oder Curl abgerufen werden:
+   ```bash
+   curl http://<Roboter-IP>:<HTTP-Port>/<Dateiname>
+   ```
+
+Das Log wird wie folgt aussehen:
+```txt
+// Student Name
+// 2026-05-12 13:17:32Z
+5<24201F400640064
+5<24A008700C80096
+5<24202BC00640064
+5<24AFF7900C80096
+5<24201F400640064
+5<24AFF7900C80096
+5<24202BC00640064
+```
+
+Oder bei einem Hindernis:
+```txt
+// Student Name
+// 2026-05-12 13:20:07Z
+5<24201F400640064
+5<24A008700C80096
+5<24202BC00640064
+5<24AFF7900C80096
+5<24201F400640064
+5<24100000000
+...Stop
+```
