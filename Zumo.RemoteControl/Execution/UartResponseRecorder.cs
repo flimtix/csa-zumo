@@ -5,9 +5,6 @@ namespace Zumo.RemoteControl.Execution;
 
 public sealed class UartResponseRecorder : IDisposable
 {
-    private const byte DriveAddress = 0x24;
-    private const byte PingAddress = 0xD1;
-
     private readonly IZumoConnectionTransport transport;
     private readonly IProtocolCodec codec;
     private readonly List<RecordedResponse> responses = [];

@@ -60,9 +60,9 @@ public sealed class RouteExecutor : IRouteExecutor
 
             recorder.Stop();
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            logger.LogWarning("Route {RouteCode} cancelled.", route.Code);
+            logger.LogWarning(ex, "Route {RouteCode} cancelled.", route.Code);
             executionStatus = RouteExecutionStatus.Cancelled;
         }
         catch (Exception ex)
